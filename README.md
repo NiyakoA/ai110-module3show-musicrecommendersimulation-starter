@@ -11,23 +11,70 @@ Your goal is to:
 - Evaluate what your system gets right and wrong
 - Reflect on how this mirrors real world AI recommenders
 
-Replace this paragraph with your own summary of what your version does.
+VibeFinder 1.0 is a content-based music recommender that scores every song in a catalog against a user's taste profile and returns the top matches. It uses genre, mood, energy, and acoustic texture to make recommendations, and explains why each song was chosen.
 
 ---
 
 ## How The System Works
 
-Explain your design in plain language.
+### Song Features
 
-Some prompts to answer:
+Each song in `data/songs.csv` has these attributes:
 
-- What features does each `Song` use in your system
-  - For example: genre, mood, energy, tempo
-- What information does your `UserProfile` store
-- How does your `Recommender` compute a score for each song
-- How do you choose which songs to recommend
+| Feature | Type | Description |
+|---|---|---|
+| `genre` | categorical | e.g. pop, lofi, hip-hop, classical |
+| `mood` | categorical | e.g. happy, chill, intense, relaxed |
+| `energy` | 0.0–1.0 | How energetic the track feels |
+| `tempo_bpm` | numeric | Beats per minute |
+| `valence` | 0.0–1.0 | Musical positivity |
+| `danceability` | 0.0–1.0 | How suitable for dancing |
+| `acousticness` | 0.0–1.0 | How acoustic vs. electronic the track is |
 
-You can include a simple diagram or bullet list if helpful.
+### User Profile
+
+The `UserProfile` stores four preferences:
+
+- `favorite_genre` — the genre the user most wants to hear
+- `favorite_mood` — the mood the user is targeting
+- `target_energy` — ideal energy level (0.0–1.0)
+- `likes_acoustic` — `True` if the user prefers acoustic, `False` for electronic/produced
+
+### Algorithm Recipe (Scoring)
+
+Every song gets a score computed as:
+
+| Rule | Points |
+|---|---|
+| Genre match | **+2.0** |
+| Mood match | **+2.0** |
+| Energy closeness | **1.5 × (1 − \|song_energy − target_energy\|)** |
+| Acoustic match | **+acousticness** if `likes_acoustic`, else **+(1 − acousticness)** |
+
+Higher score = better match. Songs are sorted descending and the top `k` are returned.
+
+### Data Flow
+
+```mermaid
+flowchart TD
+    A["User Profile\n(favorite_genre, favorite_mood,\ntarget_energy, likes_acoustic)"] --> C
+    B["songs.csv\n(18 songs)"] --> C[Load catalog into memory]
+    C --> D{For each song in catalog}
+    D --> E[+2.0 if genre matches]
+    D --> F[+2.0 if mood matches]
+    D --> G["Energy score: 1.5 × (1 − |song − target|)"]
+    D --> H[Acoustic preference score]
+    E & F & G & H --> I[Total score for this song]
+    I --> D
+    D --> J[Sort all songs by score, descending]
+    J --> K[Return Top K Recommendations]
+```
+
+### Potential Biases
+
+- **Genre over-weighting**: Genre and mood each give +2 pts — a song can score 4 pts before energy or acoustics are even considered. A great track in the wrong genre gets buried.
+- **Small catalog effects**: With only 18 songs, some genres have 1–2 representatives, so a hip-hop fan always sees the same results.
+- **No diversity enforcement**: The top 5 could all be the same genre or artist with no mechanism to spread results.
 
 ---
 
