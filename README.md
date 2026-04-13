@@ -113,13 +113,188 @@ You can add more tests in `tests/test_recommender.py`.
 
 ---
 
+## Terminal Output — Profile Evaluations
+
+Five user profiles were run against the 18-song catalog. Results below are actual terminal output.
+
+### Profile 1 — High-Energy Pop
+
+```
+==================================================
+Profile: High-Energy Pop
+  genre=pop, mood=happy, energy=0.9, acoustic=False
+==================================================
+1. Sunrise City by Neon Echo  |  Score: 6.20
+   • genre match (+2.0)
+   • mood match (+2.0)
+   • energy alignment (+1.38)
+   • electronic preference (+0.82)
+
+2. Gym Hero by Max Pulse  |  Score: 4.41
+   • genre match (+2.0)
+   • energy alignment (+1.46)
+   • electronic preference (+0.95)
+
+3. Neon Seoul by PRISM  |  Score: 4.37
+   • mood match (+2.0)
+   • energy alignment (+1.46)
+   • electronic preference (+0.91)
+
+4. Rooftop Lights by Indigo Parade  |  Score: 3.94
+   • mood match (+2.0)
+   • energy alignment (+1.29)
+   • electronic preference (+0.65)
+
+5. Backroad Summer by Clay Hollis  |  Score: 3.43
+   • mood match (+2.0)
+   • energy alignment (+1.11)
+   • electronic preference (+0.32)
+```
+
+### Profile 2 — Chill Lofi
+
+```
+==================================================
+Profile: Chill Lofi
+  genre=lofi, mood=chill, energy=0.35, acoustic=True
+==================================================
+1. Library Rain by Paper Lanterns  |  Score: 6.36
+   • genre match (+2.0)
+   • mood match (+2.0)
+   • energy alignment (+1.50)
+   • acoustic preference (+0.86)
+
+2. Midnight Coding by LoRoom  |  Score: 6.11
+   • genre match (+2.0)
+   • mood match (+2.0)
+   • energy alignment (+1.40)
+   • acoustic preference (+0.71)
+
+3. Spacewalk Thoughts by Orbit Bloom  |  Score: 4.32
+   • mood match (+2.0)
+   • energy alignment (+1.40)
+   • acoustic preference (+0.92)
+
+4. Focus Flow by LoRoom  |  Score: 4.20
+   • genre match (+2.0)
+   • energy alignment (+1.42)
+   • acoustic preference (+0.78)
+
+5. Island Vibes by Coral Drift  |  Score: 3.86
+   • mood match (+2.0)
+   • energy alignment (+1.24)
+   • acoustic preference (+0.62)
+```
+
+### Profile 3 — Deep Intense Rock
+
+```
+==================================================
+Profile: Deep Intense Rock
+  genre=rock, mood=intense, energy=0.95, acoustic=False
+==================================================
+1. Storm Runner by Voltline  |  Score: 6.34
+   • genre match (+2.0)
+   • mood match (+2.0)
+   • energy alignment (+1.44)
+   • electronic preference (+0.90)
+
+2. Iron Throne by Vaultbreaker  |  Score: 4.43
+   • mood match (+2.0)
+   • energy alignment (+1.47)
+   • electronic preference (+0.96)
+
+3. Gym Hero by Max Pulse  |  Score: 4.42
+   • mood match (+2.0)
+   • energy alignment (+1.47)
+   • electronic preference (+0.95)
+
+4. Street Flex by K-Sway  |  Score: 4.33
+   • mood match (+2.0)
+   • energy alignment (+1.40)
+   • electronic preference (+0.93)
+
+5. Neon Seoul by PRISM  |  Score: 2.29
+   • energy alignment (+1.38)
+   • electronic preference (+0.91)
+```
+
+### Profile 4 — Contradictory Listener (edge case: high energy + moody)
+
+```
+==================================================
+Profile: Contradictory Listener
+  genre=synthwave, mood=moody, energy=0.9, acoustic=False
+==================================================
+1. Night Drive Loop by Neon Echo  |  Score: 6.05
+   • genre match (+2.0)
+   • mood match (+2.0)
+   • energy alignment (+1.27)
+   • electronic preference (+0.78)
+
+2. Delta Rain Blues by Lowland Few  |  Score: 3.06
+   • mood match (+2.0)
+   • energy alignment (+0.87)
+   • electronic preference (+0.19)
+
+3. Gym Hero by Max Pulse  |  Score: 2.41
+   • energy alignment (+1.46)
+   • electronic preference (+0.95)
+
+4. Street Flex by K-Sway  |  Score: 2.40
+   • energy alignment (+1.47)
+   • electronic preference (+0.93)
+
+5. Storm Runner by Voltline  |  Score: 2.38
+   • energy alignment (+1.48)
+   • electronic preference (+0.90)
+```
+
+### Profile 5 — Reggaeton Fan (edge case: genre not in catalog)
+
+```
+==================================================
+Profile: Reggaeton Fan
+  genre=reggaeton, mood=happy, energy=0.85, acoustic=False
+==================================================
+1. Neon Seoul by PRISM  |  Score: 4.38
+   • mood match (+2.0)
+   • energy alignment (+1.47)
+   • electronic preference (+0.91)
+
+2. Sunrise City by Neon Echo  |  Score: 4.28
+   • mood match (+2.0)
+   • energy alignment (+1.46)
+   • electronic preference (+0.82)
+
+3. Rooftop Lights by Indigo Parade  |  Score: 4.01
+   • mood match (+2.0)
+   • energy alignment (+1.36)
+   • electronic preference (+0.65)
+
+4. Backroad Summer by Clay Hollis  |  Score: 3.51
+   • mood match (+2.0)
+   • energy alignment (+1.19)
+   • electronic preference (+0.32)
+
+5. Street Flex by K-Sway  |  Score: 2.39
+   • energy alignment (+1.46)
+   • electronic preference (+0.93)
+```
+
+---
+
 ## Experiments You Tried
 
-Use this section to document the experiments you ran. For example:
+### Weight Shift: Genre ÷2, Energy ×2
 
-- What happened when you changed the weight on genre from 2.0 to 0.5
-- What happened when you added tempo or valence to the score
-- How did your system behave for different types of users
+Changed scoring to: genre=+1.0, mood=+2.0, energy=3.0×(1−diff).
+
+**What changed:** Rankings 2–5 shuffled noticeably. "Gym Hero" dropped from #2 to #4 for the High-Energy Pop profile because it has the wrong mood — energy alignment alone couldn't compensate. Songs with great energy fits but wrong genre moved up.
+
+**What stayed the same:** The #1 song held position for all three profiles. Songs that matched genre + mood + energy were still clearly the best regardless of weights.
+
+**Conclusion:** The original weights are reasonable. Doubling energy rewards "vibe accuracy" over "loyalty to a genre," which is more intuitive — but the catalog is too small for the difference to be dramatic.
 
 ---
 

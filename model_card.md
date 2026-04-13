@@ -110,32 +110,37 @@
 - Mainstream genres (pop) have more songs in dataset → Statistical advantage
 - Acoustic preference penalizes electronic/produced music equally → Might feel biased to synth lovers
 
+**Key Weakness Discovered During Evaluation:**
+
+Testing a "Reggaeton Fan" profile — a user whose favorite genre is not in the catalog at all — exposed a hard ceiling problem. Because the genre match is worth +2.0 points, users whose genre is missing can never score above ~4.4 points, while users with a matching genre regularly hit 6.0+. This means the recommender is quietly unfair to listeners of genres it doesn't cover. In a real product, a fan of reggaeton, classical, or metal would always receive weaker recommendations than a pop fan, not because the algorithm is wrong, but simply because the catalog was built with certain tastes in mind. This is a form of representation bias: the data reflects the dataset creator's assumptions about what music is worth including.
+
 ---
 
 ## 7. Evaluation  
 
-**Test Profiles:**
-1. Pop-happy user (genre=pop, mood=happy, energy=0.8, likes_acoustic=False)
-   - Expected: Upbeat pop songs with high energy and danceability
-   - Result: "Sunrise City" (0.82 energy, pop, happy) ranked #1 ✓
+**Five Profiles Tested:**
 
-2. Chill-acoustic user (genre=lofi, mood=chill, energy=0.4, likes_acoustic=True)
-   - Expected: Low-energy, highly acoustic tracks
-   - Result: "Library Rain" (0.35 energy, 0.86 acoustic) ranks high ✓
+| Profile | Top Result | Score | Surprise? |
+|---|---|---|---|
+| High-Energy Pop (pop/happy/0.9) | Sunrise City | 6.20 | No — perfect match |
+| Chill Lofi (lofi/chill/0.35/acoustic) | Library Rain | 6.36 | No — expected |
+| Deep Intense Rock (rock/intense/0.95) | Storm Runner | 6.34 | No — expected |
+| Contradictory Listener (synthwave/moody/0.9) | Night Drive Loop | 6.05 | Partially — only 1 song matched genre+mood, so the #1 was obvious, but #2 was a blues track that matched mood but not energy |
+| Reggaeton Fan (reggaeton/happy/0.85) | Neon Seoul | 4.38 | Yes — the system had no reggaeton songs, so the top result was a K-pop song that happened to be happy and high-energy. No genre match was ever found. |
 
-3. Intense-rock user (genre=rock, mood=intense, energy=0.9, likes_acoustic=False)
-   - Expected: Energetic, electronic-leaning rock
-   - Result: "Storm Runner" (0.91 energy, rock) ranked high ✓
+**Key Observations:**
 
-**What Surprised Me:**
-- Energy alignment produces intuitive rankings even across genres
-- Acoustic weighting helped distinguish tracks well
-- Equal feature weighting sometimes masked preference priorities
+1. "Gym Hero" (pop/intense/0.93 energy) appeared in the top 5 for three different profiles. It is an accidental "universal high scorer" — its high energy and low acousticness make it hard to beat for any electronic-leaning user, even if the mood or genre doesn't match.
+
+2. The "Contradictory Listener" profile (high energy + moody mood) revealed a catalog gap: the catalog has no high-energy moody songs. The #2 result was a slow blues track that matched mood but had an energy of only 0.48 — far from the user's 0.9 target. The system technically gave the "best" answer, but intuitively it felt wrong.
+
+3. The weight-shift experiment (genre ÷2, energy ×2) shuffled positions 2–5 but never changed the #1 result. This suggests the algorithm is fairly stable at the top, but the middle rankings are sensitive to weights.
 
 **Testing Methods:**
-- Manual profile testing (3 user archetypes)
+- Five user archetypes run against the 18-song catalog
 - Score inspection to verify algorithm logic
-- Explanation readability check
+- Weight-shift experiment to test sensitivity
+- Edge cases: genre not in catalog, conflicting preference signals
 
 ---
 
@@ -161,10 +166,6 @@
 
 ## 9. Personal Reflection  
 
-A few sentences about your experience.  
+Building this recommender made me realize how much of a system's "intelligence" is really just math applied to assumptions. The scoring logic isn't smart — it just adds up points based on rules I wrote. But when the rules are aligned with what users actually care about (genre, mood, energy), the output feels surprisingly reasonable. What surprised me most was how a song like "Gym Hero" kept showing up across totally different profiles. It wasn't because the system misunderstood anything; it's because that song genuinely scores well on multiple dimensions for multiple user types. That's how real recommender systems create filter bubbles — not through malice, but through patterns in the data.
 
-Prompts:  
-
-- What you learned about recommender systems  
-- Something unexpected or interesting you discovered  
-- How this changed the way you think about music recommendation apps  
+The "Reggaeton Fan" edge case changed how I think about Spotify or YouTube. Those apps handle millions of genres, but they were also built by teams that made choices about what data to collect and what genres to weight. A content-based system like this one silently fails for users whose tastes aren't reflected in the catalog, and does so without any warning — the user just gets "close enough" results and never knows they're being underserved. That invisibility is what makes representation bias in recommenders so hard to catch and fix.
